@@ -25,16 +25,19 @@ struct LineSegment{
     Point start, end;
 };
 
-int POINT_COUNT = 10;
-Point points[10];
-Point hull[10];
+int POINT_COUNT = 100;
+Point points[100];
+int hullBitMap[100];
+// Point hull[100];
+int hullIndexes[100];
+
 int hullPointCount = 0, leftmostindex = 0;
 
 
 void setPointsInASquare(){
     // in a square
 
-    std::ifstream file("xy2.txt");
+    std::ifstream file("test_cases/square.txt");
     int x;
     int y, count =0;
 
@@ -42,6 +45,7 @@ void setPointsInASquare(){
         // std::cout << str << ' ' << i << std::endl;
         // printf("%d , %d \n", x, y);
         points[count].x = x; points[count].y = y;
+        hullBitMap[count] = 0;
         count++;
     }
 
@@ -52,8 +56,9 @@ void setPointsInASquare(){
 
     // init the hull
     for(int i = 0; i < POINT_COUNT; i++){
-        hull[i].x = -1;
-        hull[i].y = -1;
+        // hull[i].x = -1;
+        // hull[i].y = -1;
+        hullIndexes[i] = -1;
     }
 
     // printf("finished generating points");
@@ -87,51 +92,69 @@ void calculateConvexHull(){
     Point temp_r = {q1.x, 500};
     LineSegment r = {q1, temp_r};
     Point pivot = q1;
-    // printf("initial pivot x = %d, y = %d, index = %d", pivot.x, pivot.y, leftmostindex);
-    hull[hullPointCount] = pivot;
+    printf("initial pivot x = %d, y = %d", pivot.x, pivot.y);
+    // hull[hullPointCount] = pivot;
+    hullIndexes[hullPointCount] = leftmostindex;
+    hullBitMap[leftmostindex] = 0;
     hullPointCount ++;
     double currentAngle;
     double currentMin = 100000;
     int currentPivotIndex = leftmostindex, currentMinIndex;
+    // bool alreadyInHull = false;
     
     // printf("just before do while");
 
     do
     {
-        Point currentMinAnglePoint;
-        currentMin =10000;
+        // Point currentMinAnglePoint;
+        // printf("in while\n");
+        currentMin =10000; 
         for(int i=0; i< POINT_COUNT; i++){
-            
-            if(i == currentPivotIndex){continue;}
-            LineSegment pv = {pivot, points[i]};
-            currentAngle = getAngleBetweenLines(r, pv);
-            // printf("calc min anlge point: currentPivotIndex = %d,  i= %d, x=%d, y=%d, angle=%f, cmin=%f \n",currentPivotIndex, i, points[i].x, points[i].y, currentAngle, currentMin);
-            if (currentAngle < currentMin){
-                // printf("switching\n");
-                // currentMinAnglePoint.x = points[i].x;
-                // currentMinAnglePoint.y = points[i].y;
-                currentMinAnglePoint = points[i];
-                currentMinIndex = i;
-                currentMin = currentAngle;
+            if(hullBitMap[i] == 0 && !(pivot.x == points[i].x && pivot.y == points[i].y)){
+                LineSegment pv = {pivot, points[i]};
+                currentAngle = getAngleBetweenLines(r, pv);
+                // printf("calc min anlge point: currentPivotIndex = %d,  i= %d, x=%d, y=%d, angle=%f, cmin=%f \n",currentPivotIndex, i, points[i].x, points[i].y, currentAngle, currentMin);
+                if (currentAngle < currentMin){
+                    // printf("switching\n");
+                    
+                    // currentMinAnglePoint = points[i];
+                    currentMinIndex = i;
+                    currentMin = currentAngle;
+                }
             }
+            // else{printf("already in hull\n");}
+            
         }
-        currentPivotIndex = currentMinIndex;
-        // printf("min angle point: %d, %d, index = %d", currentMinAnglePoint.x, currentMinAnglePoint.y, currentPivotIndex);
-        // hull[hullPointCount].x = currentMinAnglePoint.x;
-        // hull[hullPointCount].y = currentMinAnglePoint.y;
-        hull[hullPointCount] = currentMinAnglePoint;
-        hullPointCount ++;
-        // r.start.x = pivot.x;
-        // r.start.y = pivot.y;
+        // currentPivotIndex = currentMinIndex;
+        // printf("min angle point: %d, %d,\n", points[currentMinIndex].x, points[currentMinIndex].y);
+        // printf("\n");
+        // printf("\n");
+        // printf("\n");
+        // for(int i = 0; i < POINT_COUNT; i++){
+        //     if(hullBitMap[i] == 1){printf("%d, ", points[i].x);}
+        //     // printf("%d, ", points[hullIndexes[i]].x);
+        // }
+        // printf("\n");
+        // printf("\n");
+        // printf("\n");
+        // for(int i = 0; i < POINT_COUNT; i++){
+        //     if(hullBitMap[i] == 1){printf("%d, ", points[i].y);}
+        //     // printf("%d, ", points[hullIndexes[i]].y);
+        // }
+        // hull[hullPointCount] = currentMinAnglePoint;
+        // hullIndexes[hullPointCount] = currentMinIndex;
+        // hullPointCount ++;
+
+        hullBitMap[currentMinIndex] = 1;
         r.start = pivot;
-        // r.end.x = currentMinAnglePoint.x;
-        // r.end.y = currentMinAnglePoint.y;
-        r.end = currentMinAnglePoint;
-        // pivot.x = currentMinAnglePoint.x;
-        // pivot.y = currentMinAnglePoint.y;
-        pivot = currentMinAnglePoint;
-        // printf("x = %d, y = %d\n", pivot.x, pivot.y);
-    } while ((pivot.x != q1.x) && (pivot.y != q1.y));
+        r.end = points[currentMinIndex];
+        // printf("here here: %d, %d\n", r.start.x, r.start.y);
+        pivot = points[currentMinIndex];
+        // printf("here here here: %d, %d\n", r.start.x, r.start.y);
+        // printf("pivothere here here: %d, %d\n", pivot.x, pivot.y);
+        // printf("q1 here here here: %d, %d\n", q1.x, q1.y);
+        
+    } while ((pivot.x != q1.x) || (pivot.y != q1.y));
 
 }
 
@@ -143,18 +166,36 @@ int main(){
         printf("%d, ", points[i].x);
     }
     printf("\n");
+    printf("\n");
+    printf("\n");
     for(int i = 0; i < POINT_COUNT; i++){
         printf("%d, ", points[i].y);
     }
     calculateConvexHull();
     printf("\n");
-    for(int i = 0; i < POINT_COUNT; i++){
-        printf("%d, ", hull[i].x);
-    }
+    printf("\n");
     printf("\n");
     for(int i = 0; i < POINT_COUNT; i++){
-        printf("%d, ", hull[i].y);
+        if(hullBitMap[i] == 1){printf("%d, ", points[i].x);}
+        // printf("%d, ", points[hullIndexes[i]].x);
     }
+    printf("\n");
+    printf("\n");
+    printf("\n");
+    for(int i = 0; i < POINT_COUNT; i++){
+        if(hullBitMap[i] == 1){printf("%d, ", points[i].y);}
+        // printf("%d, ", points[hullIndexes[i]].y);
+    }
+
+    // Point pi = {18, 95};
+    // Point p_corr = {0, 91}, p_chosen = {7,91};
+    // LineSegment rv = {{48, 99}, pi};
+    // LineSegment ppcorr = {pi, p_corr};
+    // LineSegment ppchosen = {pi, p_chosen};
+
+    // float ang1 = getAngleBetweenLines(rv, ppcorr), ang2 = getAngleBetweenLines(rv, ppchosen);
+
+    // printf("corr: %f, chosen: %f", ang1, ang2);
 
     return 0;
 }
