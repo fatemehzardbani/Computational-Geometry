@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include<algorithm>
-#include<queue>
-#include<vector>
 #include <time.h>
 #include <math.h>
 #include <string.h>
 #include <string>
 #include <fstream>
 #include<iostream>
+#include<algorithm>
+#include<queue>
+#include<vector>
+#include "partA/geometry_base.h"
+#include "partA/testcase_generator.h"
 
-S = 100;
+int S = 100;
 
 using namespace std;
 
@@ -25,22 +27,26 @@ long timespec_diff(struct timespec *strt, struct timespec *stp) {
 struct timespec ptim,ctim;
 
 struct Point{
-    int x, y;
+    double x, y;
 };
 
 struct LineSegment{
     Point start, end;
 };
 
-int POINT_COUNT = 1000;
-Point points[1000];
-int hullBitMap[1000];
-int hullIndexes[1000];
+// int POINT_COUNT = 1000;
+// Point points[1000];
+// int hullBitMap[1000];
+// int hullIndexes[1000];
+int POINT_COUNT;
+Point *points;
+int *hullBitMap;
+int *hullIndexes;
 
 int hullPointCount = 0, leftmostindex = 0;
 
 void setPointsInASquare2(){
-    int x, y;
+    double x, y;
     for(int i=0; i <POINT_COUNT; i++ ){
         x = rand() % S; y = rand() % S;
         points[i].x = x; points[i].y = y;
@@ -50,7 +56,7 @@ void setPointsInASquare2(){
 }
 
 void setPointsOnxx22(){
-    int x, y;
+    double x, y;
     for(int i=0; i <POINT_COUNT; i++ ){
         x = rand() % S; y = x * x;
         points[i].x = x; points[i].y = y;
@@ -60,7 +66,8 @@ void setPointsOnxx22(){
 }
 
 void setPointsInACircle2(){
-    int x, y, count = 0;
+    double x, y;
+    int count = 0;
     for(int i=0; i <POINT_COUNT; i++ ){
         hullIndexes[i] = -1;
     }
@@ -71,6 +78,18 @@ void setPointsInACircle2(){
             hullBitMap[count] = 0;
             count++;
         }
+    }
+}
+
+void init(vector<point> ps){
+    POINT_COUNT = ps.size();
+    points = new Point[POINT_COUNT];
+    hullBitMap = new int[POINT_COUNT]; hullIndexes = new int[POINT_COUNT];
+
+    for(int i=0; i <ps.size(); i++ ){
+        hullIndexes[i] = -1;
+        hullBitMap[i] = 0;
+        points[i].x = ps[i].x; points[i].y = ps[i].y;
     }
 }
 
@@ -138,62 +157,43 @@ void calculateConvexHull(){
 
 
 int main(){
+
+    vector<point> ps;
+    int n;
+    cin>>n;
+    generate_random(n,ps);
+
+    init(ps);
+
+    clock_gettime(CLOCK,&ptim);
+    calculateConvexHull();
+    clock_gettime(CLOCK,&ctim);
+    int number_of_points_on_hull = 0;
+    for(int i=0; i< POINT_COUNT; i++) number_of_points_on_hull += hullBitMap[i];
+    printf("\n time Elapsed: %ld milliseconds\n", timespec_diff(&ptim,&ctim));
+
+
+    // printf("square:\n");
     // setPointsInASquare2();
-    // setPointsOnxx22();
-    // setPointsInACircle2();
-    // printf("points\n");
-    // for(int i = 0; i < POINT_COUNT; i++){
-    //     printf("%d, ", points[i].x);
-    // }
-    // printf("\n");
-    // printf("\n");
-    // printf("\n");
-    // for(int i = 0; i < POINT_COUNT; i++){
-    //     printf("%d, ", points[i].y);
-    // }
     // clock_gettime(CLOCK,&ptim);
     // calculateConvexHull();
     // clock_gettime(CLOCK,&ctim);
-    
-    // printf("\n");
-    // printf("hull\n");
-    // printf("\n");
-    // printf("\n");
-    // for(int i = 0; i < POINT_COUNT; i++){
-    //     if(hullBitMap[i] == 1){printf("%d, ", points[i].x);}
-    // }
-    // printf("\n");
-    // printf("\n");
-    // printf("\n");
-    // for(int i = 0; i < POINT_COUNT; i++){
-    //     if(hullBitMap[i] == 1){printf("%d, ", points[i].y);}
-    // }
-
-    // printf("\n time Elapsed: %ld milliseconds\n",
-    //        timespec_diff(&ptim,&ctim));
+    // printf("\n time Elapsed: %ld milliseconds\n", timespec_diff(&ptim,&ctim));
 
 
-    printf("square:\n");
-    setPointsInASquare2();
-    clock_gettime(CLOCK,&ptim);
-    calculateConvexHull();
-    clock_gettime(CLOCK,&ctim);
-    printf("\n time Elapsed: %ld milliseconds\n", timespec_diff(&ptim,&ctim));
+    // printf("y = x2:\n");
+    // setPointsOnxx22();
+    // clock_gettime(CLOCK,&ptim);
+    // calculateConvexHull();
+    // clock_gettime(CLOCK,&ctim);
+    // printf("\n time Elapsed: %ld milliseconds\n", timespec_diff(&ptim,&ctim));
 
-
-    printf("y = x2:\n");
-    setPointsOnxx22();
-    clock_gettime(CLOCK,&ptim);
-    calculateConvexHull();
-    clock_gettime(CLOCK,&ctim);
-    printf("\n time Elapsed: %ld milliseconds\n", timespec_diff(&ptim,&ctim));
-
-    printf("circle:\n");
-    setPointsInACircle2();
-    clock_gettime(CLOCK,&ptim);
-    calculateConvexHull();
-    clock_gettime(CLOCK,&ctim);
-    printf(" time Elapsed: %ld milliseconds\n", timespec_diff(&ptim,&ctim));
+    // printf("circle:\n");
+    // setPointsInACircle2();
+    // clock_gettime(CLOCK,&ptim);
+    // calculateConvexHull();
+    // clock_gettime(CLOCK,&ctim);
+    // printf(" time Elapsed: %ld milliseconds\n", timespec_diff(&ptim,&ctim));
 
     return 0;
 }
