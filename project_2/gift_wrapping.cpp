@@ -170,7 +170,7 @@ int main(){
     clock_gettime(CLOCK,&ctim);
     int number_of_points_on_hull = 0;
     for(int i=0; i< POINT_COUNT; i++) number_of_points_on_hull += hullBitMap[i];
-    printf("\n time Elapsed: %ld milliseconds\n", timespec_diff(&ptim,&ctim));
+    printf("\n time Elapsed: %ld milliseconds hull_points: %d\n", timespec_diff(&ptim,&ctim), number_of_points_on_hull);
 
 
     // printf("square:\n");
