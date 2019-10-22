@@ -15,11 +15,33 @@
 #include"geometry_base.h"
 using namespace std;
 
-void generate_random(int n,vector<point> & ps)
+void generate_random_square(int n,vector<point> & ps, long  l, long h)
 {
     ps.clear(); ps.resize(0);
     for(int i=0;i<n;i++){
-        double x = (random()%1000000), y=(random()%1000000);
+        double x = (((random()+17)+2*l)%l), y=((random()+2*h)%h);
+        point pn(x,y);
+        ps.push_back(pn);
+    }
+}
+
+void generate_random_incircle (int n, vector<point> & ps, long  r)
+{
+    ps.clear(); ps.resize(0);
+    for(int i=0;i<n;i++){
+        double x = ((random()+2*r)%r); double y= (random()% int(sqrt( double (r*r)- x*x)));
+        point pn(x,y);
+        ps.push_back(pn);
+    }
+
+}
+
+void generate_random_on2curve (int n, vector<point> & ps, long  r)
+{
+    ps.clear(); ps.resize(0);
+    for(int i=0;i<n;i++){
+        double x = ((random()+2*r)%r); double y= x*x;
+        if( int(x) % 2 ==1) x= x*(-1);
         point pn(x,y);
         ps.push_back(pn);
     }
