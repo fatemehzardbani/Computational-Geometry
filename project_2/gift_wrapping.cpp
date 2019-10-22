@@ -10,7 +10,7 @@
 #include <fstream>
 #include<iostream>
 
-
+S = 100;
 
 using namespace std;
 
@@ -42,7 +42,7 @@ int hullPointCount = 0, leftmostindex = 0;
 void setPointsInASquare2(){
     int x, y;
     for(int i=0; i <POINT_COUNT; i++ ){
-        x = rand() % 100; y = rand() % 100;
+        x = rand() % S; y = rand() % S;
         points[i].x = x; points[i].y = y;
         hullBitMap[i] = 0;
         hullIndexes[i] = -1;
@@ -52,7 +52,7 @@ void setPointsInASquare2(){
 void setPointsOnxx22(){
     int x, y;
     for(int i=0; i <POINT_COUNT; i++ ){
-        x = rand() % 100; y = x * x;
+        x = rand() % S; y = x * x;
         points[i].x = x; points[i].y = y;
         hullBitMap[i] = 0;
         hullIndexes[i] = -1;
@@ -65,7 +65,7 @@ void setPointsInACircle2(){
         hullIndexes[i] = -1;
     }
     while(count < POINT_COUNT){
-        x = rand() % 100; y = rand() % 100;
+        x = rand() % S; y = rand() % S;
         if((x * x + y * y) < 10000){
             points[count].x = x; points[count].y = y;
             hullBitMap[count] = 0;
