@@ -7,156 +7,176 @@
 #include"geometry_base.h"
 #include<vector>
 #include<cmath>
-
-vector<point> mbch2_upper(vector<point> ps, int xm){
-    vector<point> res;
+#define MAX_D 1e9
+#define MIN_D -1e9
+vector<point> mbch2_upper(vector<point> ps){
     int sz = ps.size();
-    int ep1,ep2;
-    double a = (ps[0].y - ps[1].y) / (ps[0].x - ps[1].x);
-    double b = ps[0].y - ps[0].x * a;
-    double ym = a * xm + b;
-    for (int i = 2; i < sz; i ++) {
-        if (ps[i].y > a * ps[i].x + b){
-            double tmpep,tmpa,tmpb,tmpym,tmpmin = 1000000.0;
-            for (int j = 0; j < i; j ++) {
-                tmpa = (ps[j].y - ps[i].y) / (ps[j].x - ps[i].x);
-                tmpb = (ps[i].y - ps[i].x * a);
-                tmpym = tmpa * xm + tmpb;
-                if (tmpym > ym && tmpym < tmpmin) {
-                    tmpmin = tmpym;
-                    tmpep = j;
-                }
-            }
-            a = tmpa;
-            b = tmpb;
-            ym = tmpym;
-            ep1 = i;
-            ep2 = tmpep;
+    if (sz <= 2){
+        return ps;
+    }
+    vector<point> res;
+    vector<point> pl,pr;
+    double xm;
+    for (int i = 0; i < 3; i ++) {
+        if ((ps[i].x >= ps[(i + 1) % 3].x && ps[i].x <= ps[(i + 2) % 3].x) ||
+            (ps[i].x <= ps[(i + 1) % 3].x && ps[i].x >= ps[(i + 2) % 3].x)) {
+            xm = ps[i].x;
+            break;
         }
     }
-    if (comp_less(ps[ep2],ps[ep1])){
-        ep1 ^= ep2;
-        ep2 ^= ep1;
-        ep1 ^= ep2;
-    }
-    vactor<point> pr,pl;
-    for (int i = 0;i < sz; i ++) {
-        if (ps[i].x < ps[ep1].x){
+
+    for (int i = 0; i < sz; i ++){
+        if (ps[i].x < xm){
             pl.push_back(ps[i]);
-        }
-        else if (ps[i].x > ps[ep2].x){
+        } else{
             pr.push_back(ps[i]);
         }
     }
-    pl.push_back(ps[ep1]);
-    pr.push_back(ps[ep2]);
-    res.push_back(ps[ep1]);
-    res.push_back(ps[ep2]);
-    double xml,xmr;
-    if (pl.size() > 2) {
+    int epl = 0, epr = 0;
+    int szl = pl.size(),szr = pr.size();
+    if (szl == 0){
+        return ps;
+    }
+    //cout << sz << " " << szl << " " << szr << "\n";
+    for (int i = 0;i < szl; i ++) {
+        if (i != epl && cmp(det(pr[epr] - pl[epl],pl[i] - pl[epl])) == 1){
+            epl = i;
+            for (int j = 0;j < szr; j ++){
+                if (j != epr && cmp(det(pr[epr] - pl[epl],pr[j] - pl[epl])) == 1){
+                    epr = j;
+                }
+            }
+        }
+    }
+    for (int j = 0;j < szr; j ++) {
+        if (j != epr && cmp(det(pr[epr] - pl[epl],pr[j] - pl[epl])) == 1){
+            epr = j;
+            for (int i = 0;i < szl; i ++){
+                if (i != epl &&cmp(det(pr[epr] - pl[epl],pl[i] - pl[epl])) == 1){
+                    epl = i;
+                }
+            }
+        }
+    }
 
-        for (int i = 0; i < 3; i ++){
-            if (pl[i].x >= pl[(i + 1) % 3].x && pl[i].x <= pl[(i+2) %3].x || pl[i].x <= pl[(i + 1) % 3].x && pl[i].x >= pl[(i+2) %3].x){
-                xml = pl[i].x;
-                break;
-            }
+    vector<point> pll,prr;
+    for (int i = 0;i < szl; i ++){
+        if (pl[i].x <= pl[epl].x){
+            pll.push_back(pl[i]);
         }
-        vector<point> resl = mbch2_upper(pl, xml);
-        res.insert(res.end(),resl.begin(),resl.end());
-    } else{
-        res.push_back(pl[0]);
     }
-    if (pr.size() > 2) {
-        for (int i = 0; i < 3; i ++){
-            if (pr[i].x >= pr[(i + 1) % 3].x && pr[i].x <= pr[(i+2) %3].x || pr[i].x <= pr[(i + 1) % 3].x && pr[i].x >= pr[(i+2) %3].x){
-                xmr= pr[i].x;
-                break;
-            }
+    for (int i = 0;i < szr; i ++){
+        if (pr[i].x >= pr[epr].x){
+            prr.push_back(pr[i]);
         }
-        vector<point> resr = mbch2_upper(pr, xmr);
-        res.insert(res.end(),resr.begin(),resr.end());
-    } else{
-        res.push_back(pr[0]);
     }
-    res.erase(unique(res.begin(),res.end()),res.end());
+    //cout << sz << " " << szl << " " << szr << " " << pll.size() << " " << prr.size() << "\n";
+    vector<point> resl = mbch2_upper(pll);
+    vector<point> resr = mbch2_upper(prr);
+    res.insert(res.end(),resl.begin(),resl.end());
+    res.insert(res.end(),resr.begin(),resr.end());
+    sz = res.size();
+    bool fl = true,fr = true;
+    for (int i = 0; i < sz; i ++){
+        if (cmp(res[i].x - pl[epl].x) == 0 && cmp(res[i].y - pl[epl].y) == 0){
+            fl = false;
+            break;
+        }
+    }
+    for (int i = 0; i < sz; i ++){
+        if (cmp(res[i].x - pr[epr].x) == 0 && cmp(res[i].y - pr[epr].y) == 0){
+            fr = false;
+            break;
+        }
+    }
+    if (fl) res.push_back(pl[epl]);
+    if (fr) res.push_back(pr[epr]);
     return res;
 }
 
-vector<point> mbch2_below(vector<point> ps, int xm){
-    vector<point> res;
+vector<point> mbch2_below(vector<point> ps){
     int sz = ps.size();
-    int ep1,ep2;
-    double a = (ps[0].y - ps[1].y) / (ps[0].x - ps[1].x);
-    double b = ps[0].y - ps[0].x * a;
-    double ym = a * xm + b;
-    for (int i = 2; i < sz; i ++) {
-        if (ps[i].y < a * ps[i].x + b){
-            double tmpep,tmpa,tmpb,tmpym,tmpmin = 1000000.0;
-            for (int j = 0; j < i; j ++) {
-                tmpa = (ps[j].y - ps[i].y) / (ps[j].x - ps[i].x);
-                tmpb = (ps[i].y - ps[i].x * a);
-                tmpym = tmpa * xm + tmpb;
-                if (tmpym < ym && tmpym > tmpmin) {
-                    tmpmin = tmpym;
-                    tmpep = j;
-                }
-            }
-            a = tmpa;
-            b = tmpb;
-            ym = tmpym;
-            ep1 = i;
-            ep2 = tmpep;
+    if (sz <= 2){
+        return ps;
+    }
+    vector<point> res;
+    vector<point> pl,pr;
+    double xm;
+    for (int i = 0; i < 3; i ++) {
+        if ((ps[i].x >= ps[(i + 1) % 3].x && ps[i].x <= ps[(i + 2) % 3].x) ||
+            (ps[i].x <= ps[(i + 1) % 3].x && ps[i].x >= ps[(i + 2) % 3].x)) {
+            xm = ps[i].x;
+            break;
         }
     }
-    if (comp_less(ps[ep2],ps[ep1])){
-        ep1 ^= ep2;
-        ep2 ^= ep1;
-        ep1 ^= ep2;
-    }
-    vactor<point> pr,pl;
-    for (int i = 0;i < sz; i ++) {
-        if (ps[i].x < ps[ep1].x){
+    for (int i = 0; i < sz; i ++){
+        if (ps[i].x < xm){
             pl.push_back(ps[i]);
-        }
-        else if (ps[i].x > ps[ep2].x){
+        } else{
             pr.push_back(ps[i]);
         }
     }
-    pl.push_back(ps[ep1]);
-    pr.push_back(ps[ep2]);
-    res.push_back(ps[ep1]);
-    res.push_back(ps[ep2]);
-    double xml,xmr;
-    if (pl.size() > 2) {
+    int epl = 0, epr = 0;
+    int szl = pl.size(),szr = pr.size();
+    if (szl == 0){
+        return ps;
+    }
+    for (int i = 0;i < szl; i ++) {
+        if (i != epl && cmp(det(pr[epr] - pl[epl], pl[i] - pl[epl])) == -1) {
+            epl = i;
+            for (int j = 0; j < szr; j++) {
+                if (j != epr && cmp(det(pr[epr] - pl[epl], pr[j] - pl[epl])) == -1) {
+                    epr = j;
+                }
+            }
+        }
+    }
+    for (int j = 0;j < szr; j ++) {
+        if (j != epr && cmp(det(pr[epr] - pl[epl],pr[j] - pl[epl])) == -1){
+            epr = j;
+            for (int i = 0;i < szl; i ++){
+                if (i != epl && cmp(det(pr[epr] - pl[epl],pl[i] - pl[epl])) == -1){
+                    epl = i;
+                }
+            }
+        }
+    }
+    vector<point> pll,prr;
+    for (int i = 0;i < szl; i ++){
+        if (pl[i].x <= pl[epl].x){
+            pll.push_back(pl[i]);
+        }
+    }
+    for (int i = 0;i < szr; i ++){
+        if (pr[i].x >= pr[epr].x){
+            prr.push_back(pr[i]);
+        }
+    }
+    vector<point> resl = mbch2_below(pll);
+    vector<point> resr = mbch2_below(prr);
+    res.insert(res.end(),resl.begin(),resl.end());
+    res.insert(res.end(),resr.begin(),resr.end());
 
-        for (int i = 0; i < 3; i ++){
-            if (pl[i].x >= pl[(i + 1) % 3].x && pl[i].x <= pl[(i+2) %3].x || pl[i].x <= pl[(i + 1) % 3].x && pl[i].x >= pl[(i+2) %3].x){
-                xml = pl[i].x;
-                break;
-            }
+    sz = res.size();
+    bool fl = true,fr = true;
+    for (int i = 0; i < sz; i ++){
+        if (res[i] == pl[epl]){
+            fl = false;
+            break;
         }
-        vector<point> resl = mbch2_upper(pl, xml);
-        res.insert(res.end(),resl.begin(),resl.end());
-    } else{
-        res.push_back(pl[0]);
     }
-    if (pr.size() > 2) {
-        for (int i = 0; i < 3; i ++){
-            if (pr[i].x >= pr[(i + 1) % 3].x && pr[i].x <= pr[(i+2) %3].x || pr[i].x <= pr[(i + 1) % 3].x && pr[i].x >= pr[(i+2) %3].x){
-                xmr= pr[i].x;
-                break;
-            }
+    for (int i = 0; i < sz; i ++){
+        if (res[i] == pr[epr]){
+            fr = false;
+            break;
         }
-        vector<point> resr = mbch2_upper(pr, xmr);
-        res.insert(res.end(),resr.begin(),resr.end());
-    } else{
-        res.push_back(pr[0]);
     }
-    res.erase(unique(res.begin(),res.end()),res.end());
+    if (fl) res.push_back(pl[epl]);
+    if (fr) res.push_back(pr[epr]);
     return res;
 }
-
 polygon_convex MB_CH2(vector<point> ps){
+    ps.erase(unique(ps.begin(),ps.end()),ps.end());
     int sz = ps.size();
     int maxp = 0,minp = 0;
     for (int i = 1; i < sz; i ++) {
@@ -182,13 +202,15 @@ polygon_convex MB_CH2(vector<point> ps){
         if (det(ps[maxp] - ps[minp], ps[i] - ps[minp]) >= 0){
             pu.push_back(ps[i]);
         }
-        else if (det(ps[maxp] - ps[minp], ps[i] - ps[minp]) < 0){
+        else{
             pb.push_back(ps[i]);
         }
-
     }
-    vector<point> hull_upper = mbch2_upper(pu,ps[mid].x);
-    vector<point> hull_below = mbch2_below(pb,ps[mid].x);
+    //cout << pu.size() << " " << pb.size() << "\n";
+    vector<point> hull_upper = mbch2_upper(pu);
+    //cout << hull_upper.size() << "\n";
+    vector<point> hull_below = mbch2_below(pb);
+    //cout << hull_below.size() << "\n";
     vector<point> hull;
     hull.insert(hull.end(),hull_upper.begin(),hull_upper.end());
     hull.insert(hull.end(),hull_below.begin(),hull_below.end());
